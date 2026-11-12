@@ -157,7 +157,7 @@ static std::atomic<int> s_crisp_request{-1};
 static std::atomic<int> s_tv_shader_request{-1};
 static int s_tv_shader = 0;
 static bool s_crisp = false; // CPU thread
-// The page's internal resolution (GSConfig.UpscaleMultiplier: 1 native, 2 twice the PS2's lines), 0: no request.
+// The page's internal resolution (GSConfig.UpscaleMultiplier: 1 native to 4 four times the PS2's lines), 0: no request.
 static std::atomic<int> s_upscale_request{0};
 static int s_upscale = 1; // CPU thread
 // The EE cycle rate the page asked for (EmuConfig.Speedhacks.EECycleRate: 0, or -1 to -3 to underclock the EE),
@@ -2278,11 +2278,11 @@ EMSCRIPTEN_KEEPALIVE void pcsx2web_set_crisp(int crisp)
 	s_crisp_request.store(crisp ? 1 : 0, std::memory_order_release);
 }
 
-/// The internal resolution: 1 (native, as the PS2 draws) or 2 (twice the lines), applied at the next vsync or boot.
-/// Other values are ignored.
+/// The internal resolution: 1 (native, as the PS2 draws) to 4 (four times the lines, about 1440p), applied at the next
+/// vsync or boot. Other values are ignored; the GS also clamps it to the adapter's largest texture.
 EMSCRIPTEN_KEEPALIVE void pcsx2web_set_upscale(int multiplier)
 {
-	if (multiplier == 1 || multiplier == 2)
+	if (multiplier >= 1 && multiplier <= 4)
 		s_upscale_request.store(multiplier, std::memory_order_release);
 }
 

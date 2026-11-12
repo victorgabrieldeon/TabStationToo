@@ -60,6 +60,8 @@
 	const PREF_RENDERER = 'pcsx2web.renderer';
 	// The Graphics menu's resolution: '1' (native, as the PS2 draws) or '2' (twice the lines).
 	const PREF_UPSCALE = 'pcsx2web.upscale';
+	// A stored or chosen multiplier: 1 to 4 (what pcsx2web_set_upscale takes), native otherwise.
+	const upscaleOf = (v) => (['2', '3', '4'].includes(String(v)) ? Number(v) : 1);
 	const PREF_KEEP_CHROME = 'pcsx2web.keepChrome';
 	// Which PS2 port the keyboard plays as, and which one the first gamepad does (1 or 2).
 	const PREF_PAD_KEYBOARD = 'pcsx2web.padKeyboard';
@@ -409,7 +411,7 @@
 
 	const page = {
 		picture: 'smooth', // the remote's picture mode (PICTURE_MODES)
-		upscale: 1, // the Graphics menu's resolution multiplier (1 or 2)
+		upscale: 1, // the Graphics menu's resolution multiplier (1 to 4)
 		phase: 'loading', // loading | ready | unsupported | dead
 		runtimeRequested: false, // false while a touch-only device waits for a BIOS
 		vmState: STATE.WAITING,
@@ -8624,7 +8626,7 @@
 			r.checked = Number(r.value) === page.upscale;
 		// Only the GPU renderer draws above native; the software renderer ignores it.
 		gfxEls.scaleNote.textContent = gpu.mode && !gpu.mode.hw ?
-			'Only the GPU renderer draws at 2×; this picture is drawn in software. Remembered in this browser.' :
+			'Only the GPU renderer draws above native; this picture is drawn in software. Remembered in this browser.' :
 			'Remembered in this browser. Applies at once.';
 	}
 
@@ -8714,16 +8716,16 @@
 				renderGfx();
 			});
 		}
-		page.upscale = readPref(PREF_UPSCALE) === '2' ? 2 : 1;
+		page.upscale = upscaleOf(readPref(PREF_UPSCALE));
 		for (const r of gfxEls.scaleRadios) {
 			r.addEventListener('change', () => {
 				if (!r.checked)
 					return;
-				page.upscale = Number(r.value) === 2 ? 2 : 1;
+				page.upscale = upscaleOf(r.value);
 				writePref(PREF_UPSCALE, String(page.upscale));
 				if (api)
 					api.setUpscale(page.upscale);
-				pageLog(`Graphics resolution: ${page.upscale === 2 ? '2×' : 'native'}.`);
+				pageLog(`Graphics resolution: ${page.upscale > 1 ? `${page.upscale}×` : 'native'}.`);
 				renderGfx();
 			});
 		}
